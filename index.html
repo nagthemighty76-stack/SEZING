@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PPF — Operations & Vehicle Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .ppf-shadow {
+      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.14);
+    }
+    .input-focus:focus {
+      outline: none;
+      border-color: #E60000;
+      box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.15);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.35s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col">
+
+  <!-- ==================== 1. SPLIT-SCREEN LOGIN VIEW ==================== -->
+  <div id="login-view" class="min-h-screen flex flex-col lg:flex-row bg-white">
+    
+    <!-- LEFT SIDE: PPF BRAND LOGO & IDENTITY -->
+    <div class="lg:w-1/2 bg-white flex flex-col items-center justify-center p-10 lg:p-16 border-b lg:border-b-0 lg:border-r border-slate-200 relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E60000] via-[#E60000] to-black"></div>
+
+      <div class="max-w-md w-full flex flex-col items-center text-center animate-fade-in">
+        <div class="mb-6">
+          <svg viewBox="0 0 360 155" class="w-80 sm:w-96 h-auto mx-auto select-none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PPF Company Logo">
+            <path d="M24 22 H84 C112 22 128 36 128 58 C128 80 112 94 84 94 H54 V126 H24 V22 Z M54 45 V71 H80 C92 71 98 66 98 58 C98 50 92 45 80 45 H54 Z" fill="#E60000" />
+            <polygon points="16,42 132,42 128,48 16,48" fill="#FFFFFF" />
+
+            <path d="M138 22 H198 C226 22 242 36 242 58 C242 80 226 94 198 94 H168 V126 H138 V22 Z M168 45 V71 H194 C206 71 212 66 212 58 C212 50 206 45 194 45 H168 Z" fill="#E60000" />
+            <rect x="138" y="88" width="30" height="38" fill="#111111" />
+            <polygon points="134,42 246,42 242,48 134,48" fill="#FFFFFF" />
+
+            <polygon points="252,22 344,22 332,45 252,45" fill="#E60000" />
+            <rect x="252" y="51" width="30" height="75" fill="#111111" />
+            <polygon points="282,58 328,58 318,80 282,80" fill="#111111" />
+          </svg>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-black tracking-widest text-black uppercase">
+          COMPANY NAME
+        </h1>
+        <p class="text-xs sm:text-sm font-semibold tracking-[0.28em] text-slate-600 uppercase mt-1.5">
+          SLOGAN GOES HERE
+        </p>
+
+        <div class="w-16 h-1 bg-[#E60000] rounded-full my-6"></div>
+
+        <p class="text-sm text-slate-500 max-w-xs leading-relaxed">
+          Authorized Fleet, Production &amp; Line Management Portal. Sign in on the right to enter and manage records.
+        </p>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE: USER ID & PASSWORD LOGIN FORM -->
+    <div class="lg:w-1/2 bg-slate-50 flex items-center justify-center p-6 sm:p-12 lg:p-16">
+      <div class="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-8 sm:p-10 ppf-shadow animate-fade-in">
+        <div class="mb-8">
+          <span class="inline-block px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full bg-red-50 text-[#E60000] border border-red-100 mb-3">
+            PPF Portal Access
+          </span>
+          <h2 class="text-2xl font-extrabold text-slate-900">Member Login</h2>
+          <p class="text-sm text-slate-500 mt-1">Enter your User ID and Password to continue</p>
+        </div>
+
+        <div id="login-error" class="hidden mb-5 p-3.5 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center gap-2.5">
+          <svg class="w-5 h-5 shrink-0 text-[#E60000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span id="login-error-text">Invalid User ID or Password.</span>
+        </div>
+
+        <form id="login-form" class="space-y-5" novalidate>
+          <div>
+            <label for="userId" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              User ID
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </div>
+              <input
+                type="text"
+                id="userId"
+                name="userId"
+                placeholder="Enter User ID"
+                autocomplete="username"
+                required
+                class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-medium placeholder-slate-400 input-focus transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              Password
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+              </div>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter Password"
+                autocomplete="current-password"
+                required
+                class="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-medium placeholder-slate-400 input-focus transition"
+              />
+              <button
+                type="button"
+                id="toggle-password"
+                aria-label="Toggle password visibility"
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition"
+              >
+                <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
+            <span>Login ID: <strong class="text-slate-700">issaku</strong> / <strong class="text-slate-700">4567</strong></span>
+            <button type="button" id="fill-demo-btn" class="text-[#E60000] font-semibold hover:underline cursor-pointer">
+              Auto-fill
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full py-3.5 px-6 bg-[#E60000] hover:bg-[#c40000] active:scale-[0.99] text-white font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-red-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Login to Dashboard</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. DASHBOARD & DATA ENTRY VIEW ==================== -->
+  <div id="dashboard-view" class="hidden min-h-screen flex-col bg-slate-100">
+    
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+      <div class="h-1.5 bg-gradient-to-r from-[#E60000] via-[#E60000] to-black"></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <svg viewBox="0 0 360 155" class="h-9 w-auto" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 22 H84 C112 22 128 36 128 58 C128 80 112 94 84 94 H54 V126 H24 V22 Z M54 45 V71 H80 C92 71 98 66 98 58 C98 50 92 45 80 45 H54 Z" fill="#E60000" />
+            <polygon points="16,42 132,42 128,48 16,48" fill="#FFFFFF" />
+            <path d="M138 22 H198 C226 22 242 36 242 58 C242 80 226 94 198 94 H168 V126 H138 V22 Z M168 45 V71 H194 C206 71 212 66 212 58 C212 50 206 45 194 45 H168 Z" fill="#E60000" />
+            <rect x="138" y="88" width="30" height="38" fill="#111111" />
+            <polygon points="134,42 246,42 242,48 134,48" fill="#FFFFFF" />
+            <polygon points="252,22 344,22 332,45 252,45" fill="#E60000" />
+            <rect x="252" y="51" width="30" height="75" fill="#111111" />
+            <polygon points="282,58 328,58 318,80 282,80" fill="#111111" />
+          </svg>
+          <div class="hidden sm:block border-l border-slate-200 pl-3">
+            <div class="text-sm font-black tracking-wider text-black uppercase leading-none">PPF COMPANY</div>
+            <div class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase mt-0.5">Vehicle &amp; Line Entry</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-semibold text-slate-700">User: <strong id="active-user-display" class="text-black">issaku</strong></span>
+          </div>
+          <button
+            id="logout-btn"
+            type="button"
+            class="px-4 py-2 bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <svg class="w-4 h-4 text-[#E60000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 flex-1">
+
+      <!-- ==================== TOP SUMMARY COUNTS (TOTAL + INCHARGE WISE) ==================== -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 animate-fade-in">
+        <!-- Total Entries Card -->
+        <div class="bg-black text-white rounded-2xl p-5 border border-slate-800 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300">Total Entries</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#E60000]"></span>
+          </div>
+          <div id="top-total-count" class="text-3xl font-black text-white mt-2">0</div>
+          <span class="text-[11px] text-slate-400 mt-1">All recorded entries</span>
+        </div>
+
+        <!-- SIVA Count Card -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Incharge: SIVA</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-[#E60000]">SIVA</span>
+          </div>
+          <div id="count-siva" class="text-3xl font-black text-slate-900 mt-2">0</div>
+          <span class="text-[11px] text-slate-400 mt-1">Entries under SIVA</span>
+        </div>
+
+        <!-- NAGARAJU Count Card -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Incharge: NAGARAJU</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-800">NAGARAJU</span>
+          </div>
+          <div id="count-nagaraju" class="text-3xl font-black text-slate-900 mt-2">0</div>
+          <span class="text-[11px] text-slate-400 mt-1">Entries under NAGARAJU</span>
+        </div>
+
+        <!-- ANJI Count Card -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Incharge: ANJI</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-800">ANJI</span>
+          </div>
+          <div id="count-anji" class="text-3xl font-black text-slate-900 mt-2">0</div>
+          <span class="text-[11px] text-slate-400 mt-1">Entries under ANJI</span>
+        </div>
+
+        <!-- VARMA Count Card -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Incharge: VARMA</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-800">VARMA</span>
+          </div>
+          <div id="count-varma" class="text-3xl font-black text-slate-900 mt-2">0</div>
+          <span class="text-[11px] text-slate-400 mt-1">Entries under VARMA</span>
+        </div>
+      </section>
+      
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+        <div class="bg-black px-6 py-4 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-sm bg-[#E60000]"></span>
+            <h2 class="text-base sm:text-lg font-extrabold text-white uppercase tracking-wider">
+              PPF Vehicle &amp; Line Details Entry
+            </h2>
+          </div>
+          <span class="text-xs text-slate-400 font-medium">Auto-fills Google Sheet (sezing) via Apps Script</span>
+        </div>
+
+        <div id="save-toast" class="hidden mx-6 mt-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span id="save-toast-text">Record saved!</span>
+          </div>
+          <button type="button" onclick="document.getElementById('save-toast').classList.add('hidden')" class="text-emerald-600 hover:text-emerald-900 text-xs uppercase font-bold">Dismiss</button>
+        </div>
+
+        <form id="entry-form" class="p-6 sm:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            <div>
+              <label for="yearField" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                1. YEAR <span class="text-[#E60000]">*</span>
+              </label>
+              <div class="relative">
+                <select id="yearField" name="yearField" required class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer">
+                  <option value="" disabled selected>Select Year</option>
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="monthField" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                2. MONTH <span class="text-[#E60000]">*</span>
+              </label>
+              <div class="relative">
+                <select id="monthField" name="monthField" required class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer">
+                  <option value="" disabled selected>Select Month</option>
+                  <option value="JAN">JAN</option>
+                  <option value="FEB">FEB</option>
+                  <option value="MAR">MAR</option>
+                  <option value="APRIL">APRIL</option>
+                  <option value="MAY">MAY</option>
+                  <option value="JUNE">JUNE</option>
+                  <option value="JULY">JULY</option>
+                  <option value="AUGUST">AUGUST</option>
+                  <option value="SEP">SEP</option>
+                  <option value="OCT">OCT</option>
+                  <option value="NOV">NOV</option>
+                  <option value="DEC">DEC</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="hpNo" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                3. HP NO <span class="text-[#E60000]">*</span>
+              </label>
+              <input type="text" id="hpNo" name="hpNo" required placeholder="Enter HP No" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 input-focus transition" />
+            </div>
+
+            <div>
+              <label for="phNo" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                4. PH NO <span class="text-[#E60000]">*</span>
+              </label>
+              <input type="tel" id="phNo" name="phNo" required placeholder="Enter Phone No" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 input-focus transition" />
+            </div>
+
+            <div>
+              <label for="vehicleNo" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                5. VEHICLE NO <span class="text-[#E60000]">*</span>
+              </label>
+              <input type="text" id="vehicleNo" name="vehicleNo" required placeholder="e.g. AP 16 AB 1234" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 uppercase placeholder-slate-400 input-focus transition" />
+            </div>
+
+            <div>
+              <label for="version" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                6. VERSION <span class="text-[#E60000]">*</span>
+              </label>
+              <input type="text" id="version" name="version" required placeholder="Enter Version" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 input-focus transition" />
+            </div>
+
+            <div>
+              <label for="model" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                7. MODEL <span class="text-[#E60000]">*</span>
+              </label>
+              <div class="relative">
+                <select id="model" name="model" required class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer">
+                  <option value="" disabled selected>Select Model Year</option>
+                  <option value="2023">2023</option>
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="line" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                8. LINE <span class="text-[#E60000]">*</span>
+              </label>
+              <div class="relative">
+                <select id="line" name="line" required class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer">
+                  <option value="" disabled selected>Select Line</option>
+                  <option value="LINE1">LINE1</option>
+                  <option value="LINE2">LINE2</option>
+                  <option value="LINE3">LINE3</option>
+                  <option value="LINE4">LINE4</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="incharge" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                9. INCHARGE <span class="text-[#E60000]">*</span>
+              </label>
+              <div class="relative">
+                <select id="incharge" name="incharge" required class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer">
+                  <option value="" disabled selected>Select Incharge</option>
+                  <option value="SIVA">SIVA</option>
+                  <option value="NAGARAJU">NAGARAJU</option>
+                  <option value="ANJI">ANJI</option>
+                  <option value="VARMA">VARMA</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="location" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                10. LOCATION <span class="text-[#E60000]">*</span>
+              </label>
+              <div class="relative">
+                <select id="location" name="location" required class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer">
+                  <option value="" disabled selected>Select Location</option>
+                  <option value="AMR">AMR</option>
+                  <option value="GNT GOWDON">GNT GOWDON</option>
+                  <option value="BZA HUB">BZA HUB</option>
+                  <option value="TNLI">TNLI</option>
+                  <option value="PNR">PNR</option>
+                  <option value="NRPT">NRPT</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="seizedDate" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                11. SEIZED DATE <span class="text-[#E60000]">*</span>
+              </label>
+              <input type="date" id="seizedDate" name="seizedDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer" />
+            </div>
+
+            <div>
+              <label for="seizedBy" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                12. SEIZED BY <span class="text-[#E60000]">*</span>
+              </label>
+              <div class="relative">
+                <select id="seizedBy" name="seizedBy" required class="w-full appearance-none px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 input-focus transition cursor-pointer">
+                  <option value="" disabled selected>Select Seized By</option>
+                  <option value="ISSAKU">ISSAKU</option>
+                  <option value="NAGARJUNA">NAGARJUNA</option>
+                  <option value="AJAY">AJAY</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="mt-7 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-end gap-3">
+            <button type="reset" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer">
+              Clear Fields
+            </button>
+            <button type="submit" id="save-entry-btn" class="px-7 py-2.5 bg-[#E60000] hover:bg-[#c40000] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-red-600/20 transition flex items-center gap-2 cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Save Entry</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+        <div class="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-2.5">
+            <h3 class="text-base font-extrabold text-slate-900 uppercase tracking-wider">Saved Entries</h3>
+            <span id="record-count" class="px-2.5 py-0.5 text-xs font-bold bg-red-50 text-[#E60000] rounded-full border border-red-100">0</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="relative">
+              <input type="text" id="search-input" placeholder="Search records..." class="pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 input-focus w-48 sm:w-60" />
+              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <button type="button" id="refresh-sheet-btn" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer">
+              Sync Sheet
+            </button>
+
+            <button type="button" id="export-csv-btn" class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 cursor-pointer">
+              <svg class="w-4 h-4 text-[#E60000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse whitespace-nowrap">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
+                <th class="py-3.5 px-4">#</th>
+                <th class="py-3.5 px-4">YEAR</th>
+                <th class="py-3.5 px-4">MONTH</th>
+                <th class="py-3.5 px-4">HP NO</th>
+                <th class="py-3.5 px-4">PH NO</th>
+                <th class="py-3.5 px-4">VEHICLE NO</th>
+                <th class="py-3.5 px-4">VERSION</th>
+                <th class="py-3.5 px-4">MODEL</th>
+                <th class="py-3.5 px-4">LINE</th>
+                <th class="py-3.5 px-4">INCHARGE</th>
+                <th class="py-3.5 px-4">LOCATION</th>
+                <th class="py-3.5 px-4">SEIZED DATE</th>
+                <th class="py-3.5 px-4">SEIZED BY</th>
+                <th class="py-3.5 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="records-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+      &copy; <span id="year"></span> PPF COMPANY NAME. All rights reserved.
+    </footer>
+  </div>
+
+  <script>
+    // Paste your deployed Google Apps Script Web App URL here:
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6NQyLlpBA8ml8YIyKvcQ1aBTTyKzHjbFPS2xPvRWlKfywzSbz-sn1ZmTjbGaG62DdLA/exec';
+
+    const STORAGE_KEY = 'ppf_portal_records_v2';
+    const AUTH_KEY = 'ppf_portal_user_v1';
+    const VALID_USER = 'issaku';
+    const VALID_PASS = '4567';
+
+    const loginView = document.getElementById('login-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+    const loginErrorText = document.getElementById('login-error-text');
+    const userIdInput = document.getElementById('userId');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('toggle-password');
+    const fillDemoBtn = document.getElementById('fill-demo-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const activeUserDisplay = document.getElementById('active-user-display');
+
+    const entryForm = document.getElementById('entry-form');
+    const saveEntryBtn = document.getElementById('save-entry-btn');
+    const recordsTbody = document.getElementById('records-tbody');
+    const recordCount = document.getElementById('record-count');
+    const topTotalCount = document.getElementById('top-total-count');
+    const countSiva = document.getElementById('count-siva');
+    const countNagaraju = document.getElementById('count-nagaraju');
+    const countAnji = document.getElementById('count-anji');
+    const countVarma = document.getElementById('count-varma');
+    const searchInput = document.getElementById('search-input');
+    const refreshSheetBtn = document.getElementById('refresh-sheet-btn');
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    const saveToast = document.getElementById('save-toast');
+    const saveToastText = document.getElementById('save-toast-text');
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    const savedUser = sessionStorage.getItem(AUTH_KEY);
+    if (savedUser === VALID_USER) {
+      showDashboard(savedUser);
+    }
+
+    togglePasswordBtn.addEventListener('click', () => {
+      passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+    });
+
+    fillDemoBtn.addEventListener('click', () => {
+      userIdInput.value = VALID_USER;
+      passwordInput.value = VALID_PASS;
+      loginError.classList.add('hidden');
+    });
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const uid = userIdInput.value.trim().toLowerCase();
+      const pwd = passwordInput.value.trim();
+
+      if (!uid || !pwd) {
+        loginErrorText.textContent = 'Please enter both User ID and Password.';
+        loginError.classList.remove('hidden');
+        return;
+      }
+
+      if (uid !== VALID_USER || pwd !== VALID_PASS) {
+        loginErrorText.textContent = 'Invalid User ID or Password. Please check and try again.';
+        loginError.classList.remove('hidden');
+        return;
+      }
+
+      loginError.classList.add('hidden');
+      sessionStorage.setItem(AUTH_KEY, VALID_USER);
+      showDashboard(VALID_USER);
+    });
+
+    function showDashboard(uid) {
+      activeUserDisplay.textContent = uid;
+      loginView.classList.add('hidden');
+      dashboardView.classList.remove('hidden');
+      dashboardView.classList.add('flex');
+      updateTopCounts();
+      renderTable();
+      fetchFromGoogleSheet();
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem(AUTH_KEY);
+      passwordInput.value = '';
+      dashboardView.classList.add('hidden');
+      dashboardView.classList.remove('flex');
+      loginView.classList.remove('hidden');
+    });
+
+    function updateTopCounts() {
+      topTotalCount.textContent = records.length;
+
+      const tally = {
+        SIVA: 0,
+        NAGARAJU: 0,
+        ANJI: 0,
+        VARMA: 0
+      };
+
+      records.forEach(r => {
+        const inc = String(r.incharge || '').trim().toUpperCase();
+        if (tally[inc] !== undefined) {
+          tally[inc] += 1;
+        }
+      });
+
+      countSiva.textContent = tally.SIVA;
+      countNagaraju.textContent = tally.NAGARAJU;
+      countAnji.textContent = tally.ANJI;
+      countVarma.textContent = tally.VARMA;
+    }
+
+    async function fetchFromGoogleSheet() {
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.startsWith('PASTE_YOUR_')) return;
+      try {
+        const res = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await res.json();
+        if (data.status === 'success' && Array.isArray(data.records)) {
+          records = data.records.map((item, idx) => ({ ...item, id: item.id || Date.now() + idx }));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+          updateTopCounts();
+          renderTable(searchInput.value);
+        }
+      } catch (err) {
+        console.error('Sheet fetch error:', err);
+      }
+    }
+
+    refreshSheetBtn.addEventListener('click', fetchFromGoogleSheet);
+
+    async function sendToGoogleSheet(record) {
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.startsWith('PASTE_YOUR_')) {
+        return { synced: false, reason: 'URL not configured yet' };
+      }
+      const params = new URLSearchParams({
+        yearField: record.yearField,
+        monthField: record.monthField,
+        hpNo: record.hpNo,
+        phNo: record.phNo,
+        vehicleNo: record.vehicleNo,
+        version: record.version,
+        model: record.model,
+        line: record.line,
+        incharge: record.incharge,
+        location: record.location,
+        seizedDate: record.seizedDate,
+        seizedBy: record.seizedBy
+      });
+
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: params.toString()
+      });
+      return { synced: true };
+    }
+
+    entryForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      saveEntryBtn.disabled = true;
+
+      const newRecord = {
+        id: Date.now(),
+        yearField: document.getElementById('yearField').value,
+        monthField: document.getElementById('monthField').value,
+        hpNo: document.getElementById('hpNo').value.trim(),
+        phNo: document.getElementById('phNo').value.trim(),
+        vehicleNo: document.getElementById('vehicleNo').value.trim().toUpperCase(),
+        version: document.getElementById('version').value.trim(),
+        model: document.getElementById('model').value,
+        line: document.getElementById('line').value,
+        incharge: document.getElementById('incharge').value,
+        location: document.getElementById('location').value,
+        seizedDate: document.getElementById('seizedDate').value,
+        seizedBy: document.getElementById('seizedBy').value
+      };
+
+      records.unshift(newRecord);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      entryForm.reset();
+      updateTopCounts();
+      renderTable(searchInput.value);
+
+      try {
+        const result = await sendToGoogleSheet(newRecord);
+        saveToastText.textContent = result.synced
+          ? 'Record saved & sent to Google Sheet (sezing)!'
+          : 'Record saved locally. Paste your Apps Script Web App URL in GOOGLE_SCRIPT_URL.';
+      } catch (err) {
+        saveToastText.textContent = 'Record saved locally; check Apps Script deployment access (Anyone).';
+      } finally {
+        saveEntryBtn.disabled = false;
+      }
+
+      saveToast.classList.remove('hidden');
+      setTimeout(() => saveToast.classList.add('hidden'), 4000);
+    });
+
+    window.deleteRecord = function(id) {
+      records = records.filter(item => item.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      updateTopCounts();
+      renderTable(searchInput.value);
+    };
+
+    searchInput.addEventListener('input', (e) => {
+      renderTable(e.target.value);
+    });
+
+    function renderTable(filterText = '') {
+      const q = filterText.toLowerCase().trim();
+      const filtered = records.filter(r =>
+        Object.values(r).some(val => String(val).toLowerCase().includes(q))
+      );
+
+      recordCount.textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        recordsTbody.innerHTML = `
+          <tr>
+            <td colspan="14" class="py-10 text-center text-slate-400 text-sm">
+              No entries found. Fill out the fields above and click <strong class="text-slate-600">Save Entry</strong>.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      recordsTbody.innerHTML = filtered.map((r, idx) => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-3 px-4 font-bold text-slate-400 text-xs">${idx + 1}</td>
+          <td class="py-3 px-4 font-bold text-slate-800">${escapeHtml(r.yearField || '')}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(r.monthField || '')}</td>
+          <td class="py-3 px-4 font-bold text-slate-900">${escapeHtml(r.hpNo)}</td>
+          <td class="py-3 px-4 text-slate-700">${escapeHtml(r.phNo)}</td>
+          <td class="py-3 px-4">
+            <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-md font-bold text-xs text-slate-900">
+              ${escapeHtml(r.vehicleNo)}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-slate-700">${escapeHtml(r.version)}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(r.model)}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(r.line)}</td>
+          <td class="py-3 px-4 text-slate-700">${escapeHtml(r.incharge)}</td>
+          <td class="py-3 px-4 text-slate-700">${escapeHtml(r.location)}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(r.seizedDate || '')}</td>
+          <td class="py-3 px-4 font-bold text-slate-900">${escapeHtml(r.seizedBy || '')}</td>
+          <td class="py-3 px-4 text-right">
+            <button type="button" onclick="deleteRecord(${r.id})" class="text-xs font-bold text-[#E60000] hover:underline cursor-pointer">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    exportCsvBtn.addEventListener('click', () => {
+      if (records.length === 0) {
+        alert('No records available to export.');
+        return;
+      }
+      const headers = [
+        'YEAR', 'MONTH', 'HP NO', 'PH NO', 'VEHICLE NO', 'VERSION',
+        'MODEL', 'LINE', 'INCHARGE', 'LOCATION', 'SEIZED DATE', 'SEIZED BY'
+      ];
+      const csvRows = [
+        headers.join(','),
+        ...records.map(r => [
+          r.yearField || '', r.monthField || '', r.hpNo, r.phNo, r.vehicleNo, r.version,
+          r.model, r.line, r.incharge, r.location, r.seizedDate || '', r.seizedBy || ''
+        ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      ];
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PPF_Records_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
